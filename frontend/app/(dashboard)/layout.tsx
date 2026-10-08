@@ -9,7 +9,7 @@ import { WalletConnect } from "@/components/wallet/WalletConnect";
 export const metadata: Metadata = {
   title: {
     default: "Dashboard",
-    template: "%s | Stellance",
+    template: "%s | WorkOrbit",
   },
 };
 
