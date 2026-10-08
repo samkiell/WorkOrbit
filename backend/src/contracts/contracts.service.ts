@@ -142,12 +142,9 @@ export class ContractsService {
       throw new ForbiddenException('Only the client can confirm funding');
     if (contract.escrowTxHash)
       throw new ConflictException('Escrow already confirmed');
-    if (
-      contract.status !== ContractStatus.PENDING &&
-      contract.status !== ContractStatus.ACTIVE
-    ) {
+    if (contract.status !== ContractStatus.PENDING) {
       throw new BadRequestException(
-        `Cannot confirm funding for a ${contract.status} contract`,
+        `Funding can only be confirmed for a PENDING contract (current: ${contract.status})`,
       );
     }
 
