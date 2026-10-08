@@ -18,6 +18,7 @@ import {
 } from '../generated/prisma/client';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { ResolveDisputeDto } from './dto/contract-action.dto';
+import { toStroops } from '../escrow/amount.util';
 
 @Injectable()
 export class ContractsService {
@@ -59,7 +60,10 @@ export class ContractsService {
     });
     if (!client) throw new NotFoundException('Client not found');
 
-    const totalAmount = dto.milestones.reduce((sum, m) => sum + m.amount, 0);
+    const totalAmountStroops = dto.milestones.reduce(
+      (sum, milestone) => sum + toStroops(milestone.amount),
+      0n,
+    );
 
     const contract = await this.prisma.$transaction(async (tx) => {
       const c = await tx.contract.create({
@@ -113,7 +117,7 @@ export class ContractsService {
           clientPublicKey: client.stellarPublicKey,
           freelancerPublicKey: freelancer.stellarPublicKey,
           adminPublicKey: adminKey,
-          amountStroops: BigInt(Math.round(totalAmount * 10_000_000)),
+          amountStroops: totalAmountStroops,
           tokenContractId,
         });
       } catch {
