@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
-// Auth layout sets template: "%s | Stellance" → "Sign In | Stellance".
+// Auth layout sets template: "%s | WorkOrbit" → "Sign In | Stellance".
 
 export const metadata: Metadata = {
   title: "Sign In",
