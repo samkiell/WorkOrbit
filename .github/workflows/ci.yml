@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: workorbit/backend
+        working-directory: backend
 
     steps:
       - uses: actions/checkout@v5
@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: workorbit/backend/package-lock.json
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: backend-coverage
-          path: workorbit/backend/coverage/
+          path: backend/coverage/
           retention-days: 7
 
   frontend:
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: workorbit/frontend
+        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v5
@@ -62,7 +62,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: workorbit/frontend/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: workorbit/contract
+        working-directory: contract
 
     steps:
       - uses: actions/checkout@v5
@@ -101,8 +101,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            workorbit/contract/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('workorbit/contract/Cargo.toml', 'workorbit/contract/Cargo.lock') }}
+            contract/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('contract/Cargo.toml', 'contract/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
 
