@@ -166,7 +166,7 @@ export default function DemoPage() {
       <main className="mx-auto max-w-2xl space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold">Stellance Testnet Demo</h1>
+          <h1 className="text-2xl font-bold">WorkOrbit Testnet Demo</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Generate a throwaway Stellar keypair, fund it via Friendbot, and
             send a real 1 XLM payment on the Stellar testnet.
