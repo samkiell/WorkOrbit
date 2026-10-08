@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    name: Backend (audit · lint · test · coverage)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workorbit/backend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: workorbit/backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests with coverage
+        run: npm run test:cov
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ci-test-secret
+          JWT_ACCESS_EXPIRES_IN: 15m
+          JWT_REFRESH_DAYS: 30
+          REFRESH_TOKEN_PEPPER: ci-pepper
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v6
+        with:
+          name: backend-coverage
+          path: workorbit/backend/coverage/
+          retention-days: 7
+
+  frontend:
+    name: Frontend (audit · lint · build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workorbit/frontend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: workorbit/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: '1'
+
+  contracts:
+    name: Contracts (clippy · build · test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workorbit/contract
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.88.0
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            workorbit/contract/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('workorbit/contract/Cargo.toml', 'workorbit/contract/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- --deny warnings
+
+      - name: Build contract (WASM)
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Run contract tests
+        run: cargo test
