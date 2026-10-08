@@ -260,7 +260,7 @@ describe('EscrowService.verifyTransaction', () => {
   it('accepts only an on-chain escrow matching the expected parties and amount', async () => {
     const svc = makeService();
     mockRpc.simulateTransaction.mockResolvedValue({
-      results: [{ xdr: StellarSdk.xdr.ScVal.scvVoid().toXDR('base64') }],
+      result: { retval: StellarSdk.xdr.ScVal.scvVoid() },
       _error: false,
     });
     mockScValToNative.mockReturnValue({
