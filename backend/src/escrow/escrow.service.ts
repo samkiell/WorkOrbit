@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   ServiceUnavailableException,
@@ -88,7 +89,14 @@ export class EscrowService {
    * the contract stores entries under this 32-char key in persistent storage.
    */
   contractIdToSymbol(uuid: string): string {
-    return uuid.replace(/-/g, '');
+    const canonicalUuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+    const compactUuid = /^[0-9a-f]{32}$/i;
+
+    if (!canonicalUuid.test(uuid) && !compactUuid.test(uuid)) {
+      throw new BadRequestException('Contract ID must be a valid UUID.');
+    }
+
+    return uuid.replace(/-/g, '').toLowerCase();
   }
 
   /** Public key of the platform admin account (used as escrow admin). */
