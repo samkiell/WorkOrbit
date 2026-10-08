@@ -36,6 +36,8 @@ const mockContract = {
   call: jest.fn(),
 };
 
+const mockScValToNative = jest.fn();
+
 const mockTx = {
   sign: jest.fn(),
   toEnvelope: jest.fn(() => ({
@@ -61,6 +63,7 @@ jest.mock('@stellar/stellar-sdk', () => {
     // Stub nativeToScVal — escrow service passes Stellar addresses as strings;
     // the real impl validates them, which we don't need in unit tests.
     nativeToScVal: jest.fn(() => real.xdr.ScVal.scvVoid()),
+    scValToNative: mockScValToNative,
     // rpc.Server — returns our mutable mockRpc object
     rpc: {
       ...real.rpc,
@@ -93,6 +96,7 @@ jest.mock('@stellar/stellar-sdk', () => {
 
 // Import AFTER the mock is registered
 import { EscrowService } from './escrow.service';
+import * as StellarSdk from '@stellar/stellar-sdk';
 
 // ---------------------------------------------------------------------------
 // Helper: build ConfigService stub
@@ -252,6 +256,53 @@ describe('EscrowService.verifyTransaction', () => {
     await expect(svc.verifyTransaction('a'.repeat(64))).rejects.toThrow(
       /a{64}/,
     );
+  });
+  it('accepts only an on-chain escrow matching the expected parties and amount', async () => {
+    const svc = makeService();
+    mockRpc.simulateTransaction.mockResolvedValue({
+      results: [{ xdr: StellarSdk.xdr.ScVal.scvVoid().toXDR('base64') }],
+      _error: false,
+    });
+    mockScValToNative.mockReturnValue({
+      client: 'GCLIENT...',
+      freelancer: 'GFREELANCER...',
+      admin: 'GADMIN...',
+      token: 'CTOKEN...',
+      total_amount: 5_000_000_000n,
+      released_amount: 0n,
+      status: ['Funded'],
+    });
+
+    const result = await svc.verifyFundedEscrow({
+      txHash: 'a'.repeat(64),
+      contractId: '550e8400-e29b-41d4-a716-446655440000',
+      clientPublicKey: 'GCLIENT...',
+      freelancerPublicKey: 'GFREELANCER...',
+      adminPublicKey: 'GADMIN...',
+      amountStroops: 5_000_000_000n,
+      tokenContractId: 'CTOKEN...',
+    });
+
+    expect(result).toEqual({ ledger: 1 });
+    expect(mockRpc.simulateTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a funding transaction that did not succeed on Soroban', async () => {
+    const svc = makeService();
+    mockRpc.getTransaction.mockResolvedValue({ status: 'FAILED' });
+
+    await expect(
+      svc.verifyFundedEscrow({
+        txHash: 'a'.repeat(64),
+        contractId: '550e8400-e29b-41d4-a716-446655440000',
+        clientPublicKey: 'GCLIENT...',
+        freelancerPublicKey: 'GFREELANCER...',
+        adminPublicKey: 'GADMIN...',
+        amountStroops: 5_000_000_000n,
+        tokenContractId: 'CTOKEN...',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(mockRpc.simulateTransaction).not.toHaveBeenCalled();
   });
 });
 
