@@ -284,7 +284,7 @@ export class ContractsService {
 
     // Submit on-chain BEFORE committing any DB state change.
     // If this throws, the milestone stays IN_REVIEW and the client can retry.
-    const amountStroops = toStroops(milestone.amount.toString());
+    const amountStroops = toStroops(Number(milestone.amount.toString()));
     const txHash = await this.escrow.submitReleaseMilestone({
       contractId,
       amountStroops,
@@ -583,11 +583,11 @@ export class ContractsService {
       }),
     ]);
     const totalStroops = milestones.reduce(
-      (sum, milestone) => sum + toStroops(milestone.amount.toString()),
+      (sum, milestone) => sum + toStroops(Number(milestone.amount.toString())),
       0n,
     );
     const paidStroops = payments.reduce(
-      (sum, payment) => sum + toStroops(payment.amount.toString()),
+      (sum, payment) => sum + toStroops(Number(payment.amount.toString())),
       0n,
     );
     const remainingStroops = totalStroops > paidStroops
