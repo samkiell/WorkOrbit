@@ -9,7 +9,10 @@ import {
 } from 'class-validator';
 import { UserRole } from '../../generated/prisma/client';
 
-const PUBLIC_REGISTRATION_ROLES: UserRole[] = [UserRole.CLIENT, UserRole.FREELANCER];
+const PUBLIC_REGISTRATION_ROLES: UserRole[] = [
+  UserRole.CLIENT,
+  UserRole.FREELANCER,
+];
 
 export class RegisterDto {
   @ApiProperty({
@@ -44,5 +47,5 @@ export class RegisterDto {
   })
   @IsOptional()
   @IsIn(PUBLIC_REGISTRATION_ROLES)
-  role?: UserRole.CLIENT | UserRole.FREELANCER;
+  role?: UserRole;
 }
