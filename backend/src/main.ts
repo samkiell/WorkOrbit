@@ -71,7 +71,7 @@ async function bootstrap() {
   );
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Stellance API')
+    .setTitle('WorkOrbit API')
     .setDescription(
       'Stellar-powered freelance payment marketplace — escrow, jobs, contracts, milestones.',
     )
