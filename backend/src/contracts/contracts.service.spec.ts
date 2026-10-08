@@ -258,9 +258,13 @@ describe('ContractsService', () => {
 
     it('verifies tx hash on Horizon and saves it', async () => {
       const { prisma, escrow, service } = setup();
-      prisma.contract.findUnique.mockResolvedValue(baseContract);
+      prisma.contract.findUnique.mockResolvedValue({
+        ...baseContract,
+        status: ContractStatus.PENDING,
+      });
       prisma.contract.update.mockResolvedValue({
         ...baseContract,
+        status: ContractStatus.ACTIVE,
         escrowTxHash: 'new-hash',
       });
 
