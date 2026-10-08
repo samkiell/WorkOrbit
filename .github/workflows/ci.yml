@@ -27,12 +27,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Fail the build if any HIGH or CRITICAL vulnerabilities are introduced.
-      # MODERATE is allowed (3 remain from prisma devDeps, tracked in
-      # docs/dependency-health.md).
-      - name: Security audit
-        run: npm audit --audit-level=high
-
       - name: Lint
         run: npm run lint
 
@@ -55,6 +49,9 @@ jobs:
           path: backend/coverage/
           retention-days: 7
 
+      - name: Security audit
+        run: npm audit --audit-level=high
+
   # ── Frontend ─────────────────────────────────────────────────────────────────
   frontend:
     name: Frontend (audit · lint · build)
@@ -75,10 +72,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Fail on HIGH or CRITICAL vulnerabilities introduced in the frontend.
-      - name: Security audit
-        run: npm audit --audit-level=high
-
       - name: Lint
         run: npm run lint
 
@@ -88,6 +81,9 @@ jobs:
           NODE_ENV: production
           # Suppress telemetry in CI
           NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: Security audit
+        run: npm audit --audit-level=high
 
   # ── Soroban Contracts ────────────────────────────────────────────────────────
   contracts:
