@@ -11,7 +11,7 @@ import * as StellarSdk from '@stellar/stellar-sdk';
  * EscrowService
  *
  * Wraps @stellar/stellar-sdk to build and submit Soroban invocation
- * transactions for the Stellance escrow contract on Stellar.
+ * transactions for the WorkOrbit escrow contract on Stellar.
  *
  * Why Stellar-specific:
  * - buildFundXdr returns unsigned XDR for Freighter signing (non-custodial)
