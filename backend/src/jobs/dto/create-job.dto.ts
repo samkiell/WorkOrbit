@@ -4,6 +4,7 @@ import {
   IsString,
   IsNumber,
   IsPositive,
+  Max,
   MaxLength,
 } from 'class-validator';
 
@@ -22,6 +23,7 @@ export class CreateJobDto {
   @ApiProperty({ example: 1200.0 })
   @IsNumber({ maxDecimalPlaces: 7 })
   @IsPositive()
+  @Max(99_999_999_999)
   budget: number;
 
   @ApiProperty({ example: 'Smart Contracts' })
