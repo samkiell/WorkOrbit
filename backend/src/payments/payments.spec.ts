@@ -426,7 +426,7 @@ function mockHorizon(svc: PaymentsService) {
   // Replace the private horizonServer() factory on the instance
   jest
     .spyOn(svc as unknown as { horizonServer: () => unknown }, 'horizonServer')
-    .mockReturnValue(server as unknown as StellarSdk.Horizon.Server);
+    .mockReturnValue(server as StellarSdk.Horizon.Server);
 
   return { server, accountsCall, loadAccount, fetchBaseFee, submitTransaction };
 }
@@ -537,7 +537,7 @@ describe('PaymentsService — getBalances() Horizon paths', () => {
 
     const networkErr = new StellarSdk.NetworkError(
       'connection timeout',
-      { status: 404 } as unknown as Response,
+      new Response(null, { status: 404 }),
     );
     accountsCall.mockRejectedValue(networkErr);
 
@@ -598,7 +598,7 @@ describe('PaymentsService — withdraw()', () => {
   it('throws BadRequestException for a non-XLM asset', async () => {
     const svc = makeService();
     await expect(
-      svc.withdraw({ ...validParams, asset: 'USDC' as 'XLM' }),
+      svc.withdraw({ ...validParams, asset: 'USDC' }),
     ).rejects.toThrow(BadRequestException);
   });
 
