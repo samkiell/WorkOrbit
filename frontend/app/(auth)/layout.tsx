@@ -6,8 +6,8 @@ export const metadata: Metadata = {
     // Each auth page (login, register) exports its own title string.
     // `default` here is the fallback if a nested segment has no title —
     // using the site name keeps it sensible rather than empty.
-    default: "Stellance",
-    template: "%s | Stellance",
+    default: "WorkOrbit",
+    template: "%s | WorkOrbit",
   },
 };
 
