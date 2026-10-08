@@ -16,5 +16,6 @@ describe('toStroops', () => {
     expect(() => toStroops(-1)).toThrow(RangeError);
     expect(() => toStroops(Number.NaN)).toThrow(RangeError);
     expect(() => toStroops(100_000_000_000)).toThrow(RangeError);
+    expect(() => toStroops(0.00000001)).toThrow(RangeError);
   });
 });
