@@ -284,9 +284,7 @@ export class ContractsService {
 
     // Submit on-chain BEFORE committing any DB state change.
     // If this throws, the milestone stays IN_REVIEW and the client can retry.
-    const amountStroops = BigInt(
-      Math.round(parseFloat(milestone.amount.toString()) * 10_000_000),
-    );
+    const amountStroops = toStroops(milestone.amount.toString());
     const txHash = await this.escrow.submitReleaseMilestone({
       contractId,
       amountStroops,
@@ -584,13 +582,17 @@ export class ContractsService {
         select: { amount: true },
       }),
     ]);
-    const SCALE = 10_000_000;
-    const totalCents = milestones.reduce((s, m) => {
-      return s + Math.round(parseFloat(m.amount.toString()) * SCALE);
-    }, 0);
-    const paidCents = payments.reduce((s, p) => {
-      return s + Math.round(parseFloat(p.amount.toString()) * SCALE);
-    }, 0);
-    return Math.max(0, (totalCents - paidCents) / SCALE);
+    const totalStroops = milestones.reduce(
+      (sum, milestone) => sum + toStroops(milestone.amount.toString()),
+      0n,
+    );
+    const paidStroops = payments.reduce(
+      (sum, payment) => sum + toStroops(payment.amount.toString()),
+      0n,
+    );
+    const remainingStroops = totalStroops > paidStroops
+      ? totalStroops - paidStroops
+      : 0n;
+    return Number(remainingStroops) / 10_000_000;
   }
 }
