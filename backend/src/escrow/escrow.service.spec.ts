@@ -147,7 +147,7 @@ beforeEach(() => {
   });
   mockHorizonServer.transactions.mockReturnValue({
     transaction: jest.fn().mockReturnValue({
-      call: jest.fn().mockResolvedValue({ ledger_attr: 1 }),
+      call: jest.fn().mockResolvedValue({ ledger_attr: 1, successful: true }),
     }),
   });
 });
@@ -213,13 +213,19 @@ describe('EscrowService.verifyTransaction', () => {
   it('returns { ledger } on Horizon success', async () => {
     mockHorizonServer.transactions.mockReturnValue({
       transaction: jest.fn().mockReturnValue({
-        call: jest.fn().mockResolvedValue({ ledger_attr: 99 }),
+        call: jest.fn().mockResolvedValue({ ledger_attr: 99, successful: true }),
       }),
     });
 
     const svc = makeService();
-    const result = await svc.verifyTransaction('abc123');
+    const result = await svc.verifyTransaction('a'.repeat(64));
     expect(result).toEqual({ ledger: 99 });
+  });
+
+  it('rejects malformed transaction hashes before calling Horizon', async () => {
+    const svc = makeService();
+    await expect(svc.verifyTransaction('bad-hash')).rejects.toThrow(BadRequestException);
+    expect(mockHorizonServer.transactions).not.toHaveBeenCalled();
   });
 
   it('throws ServiceUnavailableException on Horizon network error', async () => {
@@ -230,7 +236,7 @@ describe('EscrowService.verifyTransaction', () => {
     });
 
     const svc = makeService();
-    await expect(svc.verifyTransaction('bad-hash')).rejects.toThrow(
+    await expect(svc.verifyTransaction('a'.repeat(64))).rejects.toThrow(
       ServiceUnavailableException,
     );
   });
@@ -243,8 +249,8 @@ describe('EscrowService.verifyTransaction', () => {
     });
 
     const svc = makeService();
-    await expect(svc.verifyTransaction('specific-hash')).rejects.toThrow(
-      /specific-hash/,
+    await expect(svc.verifyTransaction('a'.repeat(64))).rejects.toThrow(
+      /a{64}/,
     );
   });
 });
