@@ -308,7 +308,7 @@ describe('EscrowService.submitReleaseMilestone', () => {
     const svc = makeService({ STELLAR_ADMIN_SECRET: undefined });
     await expect(
       svc.submitReleaseMilestone({
-        contractId: 'any',
+        contractId: '550e8400-e29b-41d4-a716-446655440000',
         amountStroops: BigInt(100),
       }),
     ).rejects.toThrow(ServiceUnavailableException);
@@ -323,7 +323,7 @@ describe('EscrowService.submitReleaseMilestone', () => {
     const svc = makeService();
     await expect(
       svc.submitReleaseMilestone({
-        contractId: 'any',
+        contractId: '550e8400-e29b-41d4-a716-446655440000',
         amountStroops: BigInt(100),
       }),
     ).rejects.toThrow(ServiceUnavailableException);
@@ -339,7 +339,7 @@ describe('EscrowService.submitReleaseMilestone', () => {
     const svc = makeService();
     await expect(
       svc.submitReleaseMilestone({
-        contractId: 'any',
+        contractId: '550e8400-e29b-41d4-a716-446655440000',
         amountStroops: BigInt(100),
       }),
     ).rejects.toThrow(ServiceUnavailableException);
@@ -353,21 +353,21 @@ describe('EscrowService.submitReleaseMilestone', () => {
 describe('EscrowService admin helpers', () => {
   it('submitRelease returns tx hash', async () => {
     const svc = makeService();
-    expect(await svc.submitRelease('contract-id-abc')).toBe(
+    expect(await svc.submitRelease('550e8400-e29b-41d4-a716-446655440000')).toBe(
       'mock-tx-hash-abc123',
     );
   });
 
   it('submitRefund returns tx hash', async () => {
     const svc = makeService();
-    expect(await svc.submitRefund('contract-id-xyz')).toBe(
+    expect(await svc.submitRefund('550e8400-e29b-41d4-a716-446655440000')).toBe(
       'mock-tx-hash-abc123',
     );
   });
 
   it('submitDispute returns tx hash', async () => {
     const svc = makeService();
-    expect(await svc.submitDispute('contract-id-dispute')).toBe(
+    expect(await svc.submitDispute('550e8400-e29b-41d4-a716-446655440000')).toBe(
       'mock-tx-hash-abc123',
     );
   });
@@ -382,7 +382,7 @@ describe('EscrowService.submitResolveDispute', () => {
     const svc = makeService();
     expect(
       await svc.submitResolveDispute({
-        contractId: 'ctr-001',
+        contractId: '550e8400-e29b-41d4-a716-446655440000',
         decision: 0,
         freelancerBps: 0,
       }),
@@ -393,7 +393,7 @@ describe('EscrowService.submitResolveDispute', () => {
     const svc = makeService();
     expect(
       await svc.submitResolveDispute({
-        contractId: 'ctr-001',
+        contractId: '550e8400-e29b-41d4-a716-446655440000',
         decision: 1,
         freelancerBps: 0,
       }),
@@ -404,7 +404,7 @@ describe('EscrowService.submitResolveDispute', () => {
     const svc = makeService();
     expect(
       await svc.submitResolveDispute({
-        contractId: 'ctr-001',
+        contractId: '550e8400-e29b-41d4-a716-446655440000',
         decision: 2,
         freelancerBps: 6000,
       }),
