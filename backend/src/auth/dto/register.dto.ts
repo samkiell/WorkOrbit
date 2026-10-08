@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { UserRole } from '../../generated/prisma/client';
 
-const PUBLIC_REGISTRATION_ROLES = [UserRole.CLIENT, UserRole.FREELANCER] as const;
+const PUBLIC_REGISTRATION_ROLES: UserRole[] = [UserRole.CLIENT, UserRole.FREELANCER];
 
 export class RegisterDto {
   @ApiProperty({
