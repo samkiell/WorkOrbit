@@ -112,6 +112,7 @@ function makeEscrowMock() {
     getAdminPublicKey: jest.fn().mockReturnValue('GADMIN...'),
     buildFundXdr: jest.fn().mockResolvedValue('xdr-base64...'),
     verifyTransaction: jest.fn().mockResolvedValue({ ledger: 123 }),
+    verifyFundedEscrow: jest.fn().mockResolvedValue({ ledger: 123 }),
     submitReleaseMilestone: jest.fn().mockResolvedValue('tx-hash-release'),
     submitRelease: jest.fn().mockResolvedValue('tx-hash-release-all'),
     submitRefund: jest.fn().mockResolvedValue('tx-hash-refund'),
@@ -131,9 +132,14 @@ function setup() {
   const prisma = makePrismaMock();
   const escrow = makeEscrowMock();
   const notifications = makeNotificationsMock();
-  // ConfigService mock — returns undefined for any key so the service uses
-  // its built-in fallback values (testnet defaults).
-  const config = { get: jest.fn().mockReturnValue(undefined) };
+  // Testnet token contract used by the escrow funding fixtures.
+  const config = {
+    get: jest.fn((key: string) =>
+      key === 'STELLAR_TOKEN_CONTRACT_ID'
+        ? 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC'
+        : undefined,
+    ),
+  };
   const service = new ContractsService(
     prisma as unknown as PrismaService,
     escrow as unknown as EscrowService,
@@ -253,7 +259,7 @@ describe('ContractsService', () => {
       await expect(
         service.confirmFund(CONTRACT_ID, CLIENT_ID, 'a'.repeat(64)),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(escrow.verifyTransaction).not.toHaveBeenCalled();
+      expect(escrow.verifyFundedEscrow).not.toHaveBeenCalled();
     });
 
     it('verifies tx hash on Horizon and saves it', async () => {
@@ -261,6 +267,7 @@ describe('ContractsService', () => {
       prisma.contract.findUnique.mockResolvedValue({
         ...baseContract,
         status: ContractStatus.PENDING,
+        milestones: [pendingMilestone],
       });
       prisma.contract.update.mockResolvedValue({
         ...baseContract,
@@ -274,7 +281,15 @@ describe('ContractsService', () => {
         'new-hash',
       );
 
-      expect(escrow.verifyTransaction).toHaveBeenCalledWith('new-hash');
+      expect(escrow.verifyFundedEscrow).toHaveBeenCalledWith({
+        txHash: 'new-hash',
+        contractId: CONTRACT_ID,
+        clientPublicKey: 'GCLIENT...',
+        freelancerPublicKey: 'GFREELANCER...',
+        adminPublicKey: 'GADMIN...',
+        amountStroops: 5_000_000_000n,
+        tokenContractId: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      });
       expect(prisma.contract.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ escrowTxHash: 'new-hash' }),
