@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsPositive,
+  Max,
   MaxLength,
   ArrayMinSize,
   ValidateNested,
@@ -22,6 +23,7 @@ export class MilestoneInputDto {
   @ApiProperty({ example: 400.0 })
   @IsNumber({ maxDecimalPlaces: 7 })
   @IsPositive()
+  @Max(99_999_999_999)
   amount: number;
 }
 
