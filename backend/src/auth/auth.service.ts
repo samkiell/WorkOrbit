@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -225,6 +226,16 @@ export class AuthService {
     registerDto: RegisterDto,
     meta?: { ip?: string; userAgent?: string },
   ) {
+    if (
+      registerDto.role !== undefined &&
+      registerDto.role !== UserRole.CLIENT &&
+      registerDto.role !== UserRole.FREELANCER
+    ) {
+      throw new BadRequestException(
+        'Public registration only supports CLIENT or FREELANCER roles.',
+      );
+    }
+
     const existingUser = await this.usersService.findOneByEmail(
       registerDto.email,
     );
