@@ -1,12 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsEnum,
+  IsIn,
   IsNotEmpty,
   IsOptional,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 import { UserRole } from '../../generated/prisma/client';
+
+const PUBLIC_REGISTRATION_ROLES = [UserRole.CLIENT, UserRole.FREELANCER] as const;
 
 export class RegisterDto {
   @ApiProperty({
@@ -23,6 +26,7 @@ export class RegisterDto {
   })
   @IsNotEmpty()
   @MinLength(6)
+  @MaxLength(128)
   password: string;
 
   @ApiProperty({
@@ -30,14 +34,15 @@ export class RegisterDto {
     description: 'Display name shown on the platform.',
   })
   @IsNotEmpty()
+  @MaxLength(120)
   name: string;
 
   @ApiPropertyOptional({
-    enum: UserRole,
+    enum: PUBLIC_REGISTRATION_ROLES,
     example: UserRole.CLIENT,
-    description: 'Account role. Defaults to CLIENT if omitted.',
+    description: 'Public account role. ADMIN accounts must be provisioned separately.',
   })
   @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
+  @IsIn(PUBLIC_REGISTRATION_ROLES)
+  role?: UserRole.CLIENT | UserRole.FREELANCER;
 }
