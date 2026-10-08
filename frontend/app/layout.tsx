@@ -22,8 +22,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Stellance",
-    template: "%s | Stellance",
+    default: "WorkOrbit",
+    template: "%s | WorkOrbit",
   },
   description:
     "A Stellar-powered freelance payment marketplace for instant escrow and on-chain payouts.",
