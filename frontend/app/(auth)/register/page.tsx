@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { RegisterForm } from "./RegisterForm";
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
-// The auth layout sets template: "%s | Stellance", so the browser title
+// The auth layout sets template: "%s | WorkOrbit", so the browser title
 // becomes "Create Account | Stellance".
 
 export const metadata: Metadata = {
