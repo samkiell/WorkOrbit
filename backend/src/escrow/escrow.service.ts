@@ -138,6 +138,107 @@ export class EscrowService {
     }
   }
 
+  /**
+   * Confirm the escrow state on Soroban before the API marks a contract ACTIVE.
+   * A successful Horizon transaction by itself does not prove that this
+   * contract was funded with the expected parties, token, and amount.
+   */
+  async verifyFundedEscrow(params: {
+    txHash: string;
+    contractId: string;
+    clientPublicKey: string;
+    freelancerPublicKey: string;
+    adminPublicKey: string;
+    amountStroops: bigint;
+    tokenContractId: string;
+  }): Promise<{ ledger: number }> {
+    const horizonProof = await this.verifyTransaction(params.txHash);
+
+    try {
+      const rpcServer = new StellarSdk.rpc.Server(this.sorobanRpcUrl);
+      const confirmedTx = await rpcServer.getTransaction(params.txHash);
+      if (confirmedTx.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS) {
+        throw new BadRequestException('Funding transaction has not succeeded on Soroban.');
+      }
+
+      const account = await rpcServer.getAccount(params.clientPublicKey);
+      const contract = new StellarSdk.Contract(this.escrowContractId);
+      const query = new StellarSdk.TransactionBuilder(account, {
+        fee: StellarSdk.BASE_FEE,
+        networkPassphrase: this.networkPassphrase,
+      })
+        .addOperation(
+          contract.call(
+            'get_escrow',
+            StellarSdk.nativeToScVal(this.contractIdToSymbol(params.contractId), {
+              type: 'symbol',
+            }),
+          ),
+        )
+        .setTimeout(60)
+        .build();
+
+      const simulation = await rpcServer.simulateTransaction(query);
+      if (StellarSdk.rpc.Api.isSimulationError(simulation)) {
+        throw new ServiceUnavailableException(
+          `Unable to read escrow state from Soroban: ${simulation.error}`,
+        );
+      }
+
+      const resultXdr = simulation.results?.[0]?.xdr;
+      if (!resultXdr) {
+        throw new ServiceUnavailableException('Soroban returned no escrow state.');
+      }
+
+      const decoded = StellarSdk.scValToNative(
+        StellarSdk.xdr.ScVal.fromXDR(resultXdr, 'base64'),
+      );
+      const escrow = Array.isArray(decoded) ? decoded[0] : decoded;
+      if (typeof escrow !== 'object' || escrow === null) {
+        throw new BadRequestException('No on-chain escrow exists for this contract.');
+      }
+
+      const entry = escrow as Record<string, unknown>;
+      const status = Array.isArray(entry.status) ? entry.status[0] : entry.status;
+      const totalAmount =
+        typeof entry.total_amount === 'bigint'
+          ? entry.total_amount
+          : BigInt(String(entry.total_amount));
+      const releasedAmount =
+        typeof entry.released_amount === 'bigint'
+          ? entry.released_amount
+          : BigInt(String(entry.released_amount));
+
+      const matchesExpectedEscrow =
+        entry.client === params.clientPublicKey &&
+        entry.freelancer === params.freelancerPublicKey &&
+        entry.admin === params.adminPublicKey &&
+        entry.token === params.tokenContractId &&
+        totalAmount === params.amountStroops &&
+        releasedAmount === 0n &&
+        status === 'Funded';
+
+      if (!matchesExpectedEscrow) {
+        throw new BadRequestException(
+          'On-chain escrow state does not match this contract, parties, token, and amount.',
+        );
+      }
+
+      return horizonProof;
+    } catch (err: unknown) {
+      if (
+        err instanceof BadRequestException ||
+        err instanceof ServiceUnavailableException
+      ) {
+        throw err;
+      }
+      const message = err instanceof Error ? err.message : String(err);
+      throw new ServiceUnavailableException(
+        `Unable to verify funded escrow state on Soroban: ${message}`,
+      );
+    }
+  }
+
   // -------------------------------------------------------------------------
   // Soroban — client-signed (XDR returned for Freighter)
   // -------------------------------------------------------------------------
