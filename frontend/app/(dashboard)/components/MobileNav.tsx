@@ -161,7 +161,7 @@ function Drawer({ open, onClose }: { open: boolean; onClose: () => void }) {
         }}>
           <Link href="/" onClick={onClose}
             style={{ display: "flex", alignItems: "center", gap: "0.625rem", textDecoration: "none" }}>
-            <Image src="/logo.png" alt="Stellance" width={26} height={26} style={{ borderRadius: "6px" }} />
+            <Image src="/logo.png" alt="WorkOrbit" width={26} height={26} style={{ borderRadius: "6px" }} />
             <span style={{
               fontFamily: "var(--font-space-grotesk)",
               fontWeight: 600,
@@ -266,7 +266,7 @@ export default function MobileNav() {
         {/* Logo */}
         <Link href="/"
           style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-          <Image src="/logo.png" alt="Stellance" width={24} height={24} style={{ borderRadius: "5px" }} />
+          <Image src="/logo.png" alt="WorkOrbit" width={24} height={24} style={{ borderRadius: "5px" }} />
           <span style={{
             fontFamily: "var(--font-space-grotesk)",
             fontWeight: 600,
