@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
   ConflictException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -28,6 +29,16 @@ export class ContractsService {
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
   ) {}
+
+  private getConfiguredTokenContractId(): string {
+    const tokenContractId = this.config.get<string>('STELLAR_TOKEN_CONTRACT_ID');
+    if (!tokenContractId || !/^C[A-Z2-7]{55}$/.test(tokenContractId)) {
+      throw new ServiceUnavailableException(
+        'A valid STELLAR_TOKEN_CONTRACT_ID must be configured for the selected network.',
+      );
+    }
+    return tokenContractId;
+  }
 
   /**
    * POST /contracts
@@ -109,9 +120,7 @@ export class ContractsService {
         // config pipeline (env file, mapped config, container env injection).
         // Fallback to the well-known testnet wrapped-native-XLM contract so
         // local development works without any extra env vars.
-        const tokenContractId =
-          this.config.get<string>('STELLAR_TOKEN_CONTRACT_ID') ??
-          'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
+        const tokenContractId = this.getConfiguredTokenContractId();
         fundXdr = await this.escrow.buildFundXdr({
           contractId: contract.id,
           clientPublicKey: client.stellarPublicKey,
@@ -148,7 +157,29 @@ export class ContractsService {
       );
     }
 
-    await this.escrow.verifyTransaction(txHash);
+    const clientPublicKey = contract.client.stellarPublicKey;
+    const freelancerPublicKey = contract.freelancer.stellarPublicKey;
+    if (!clientPublicKey || !freelancerPublicKey) {
+      throw new BadRequestException(
+        'Both contract parties must connect valid Stellar public keys before funding.',
+      );
+    }
+
+    const amountStroops = contract.milestones.reduce(
+      (sum, milestone) =>
+        sum + toStroops(Number(milestone.amount.toString())),
+      0n,
+    );
+
+    await this.escrow.verifyFundedEscrow({
+      txHash,
+      contractId: id,
+      clientPublicKey,
+      freelancerPublicKey,
+      adminPublicKey: this.escrow.getAdminPublicKey(),
+      amountStroops,
+      tokenContractId: this.getConfiguredTokenContractId(),
+    });
 
     const updated = await this.prisma.contract.update({
       where: { id },
