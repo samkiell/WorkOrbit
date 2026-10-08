@@ -118,11 +118,19 @@ export class EscrowService {
    * Throws ServiceUnavailableException on network error or not found.
    */
   async verifyTransaction(txHash: string): Promise<{ ledger: number }> {
+    if (!/^[a-f0-9]{64}$/i.test(txHash)) {
+      throw new BadRequestException('Transaction hash must be 64 hexadecimal characters.');
+    }
+
     try {
       const server = new StellarSdk.Horizon.Server(this.horizonUrl);
       const tx = await server.transactions().transaction(txHash).call();
+      if (!tx.successful) {
+        throw new BadRequestException('Stellar transaction did not succeed.');
+      }
       return { ledger: tx.ledger_attr };
     } catch (err: unknown) {
+      if (err instanceof BadRequestException) throw err;
       const msg = err instanceof Error ? err.message : String(err);
       throw new ServiceUnavailableException(
         `Cannot verify tx ${txHash} on Horizon: ${msg}`,
