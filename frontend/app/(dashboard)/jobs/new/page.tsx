@@ -124,7 +124,7 @@ export default function NewJobPage() {
           Post a Job
         </h1>
         <p className="text-sm text-text-muted">
-          Describe your project and set a budget. Freelancers on Stellance will
+          Describe your project and set a budget. Freelancers on WorkOrbit will
           apply and you can fund escrow directly on-chain.
         </p>
       </div>
