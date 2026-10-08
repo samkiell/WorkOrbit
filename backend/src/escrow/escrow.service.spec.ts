@@ -17,7 +17,7 @@
  *   - submitResolveDispute()   — all three decision codes
  *   - constructor              — warns on missing env vars, picks testnet defaults
  */
-import { ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 // ---------------------------------------------------------------------------
@@ -174,9 +174,17 @@ describe('EscrowService.contractIdToSymbol', () => {
     );
   });
 
-  it('handles an empty string', () => {
+  it('normalizes uppercase compact UUIDs', () => {
     const svc = makeService();
-    expect(svc.contractIdToSymbol('')).toBe('');
+    expect(svc.contractIdToSymbol('550E8400E29B41D4A716446655440000')).toBe(
+      '550e8400e29b41d4a716446655440000',
+    );
+  });
+
+  it('rejects identifiers that cannot be represented as UUID-backed keys', () => {
+    const svc = makeService();
+    expect(() => svc.contractIdToSymbol('')).toThrow(BadRequestException);
+    expect(() => svc.contractIdToSymbol('contract_abc1')).toThrow(BadRequestException);
   });
 });
 
