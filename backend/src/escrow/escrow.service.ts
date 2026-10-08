@@ -185,26 +185,24 @@ export class EscrowService {
         );
       }
 
-      const resultXdr = simulation.results?.[0]?.xdr;
-      if (!resultXdr) {
+      const resultValue = simulation.result?.retval;
+      if (!resultValue) {
         throw new ServiceUnavailableException('Soroban returned no escrow state.');
       }
 
-      const decoded = StellarSdk.scValToNative(
-        StellarSdk.xdr.ScVal.fromXDR(resultXdr, 'base64'),
-      );
-      const escrow = Array.isArray(decoded) ? decoded[0] : decoded;
+      const decoded: unknown = StellarSdk.scValToNative(resultValue);
+      const escrow: unknown = Array.isArray(decoded) ? decoded[0] : decoded;
       if (typeof escrow !== 'object' || escrow === null) {
         throw new BadRequestException('No on-chain escrow exists for this contract.');
       }
 
       const entry = escrow as Record<string, unknown>;
-      const status = Array.isArray(entry.status) ? entry.status[0] : entry.status;
-      const totalAmount =
+      const status: unknown = Array.isArray(entry.status) ? entry.status[0] : entry.status;
+      const totalAmount: bigint =
         typeof entry.total_amount === 'bigint'
           ? entry.total_amount
           : BigInt(String(entry.total_amount));
-      const releasedAmount =
+      const releasedAmount: bigint =
         typeof entry.released_amount === 'bigint'
           ? entry.released_amount
           : BigInt(String(entry.released_amount));
