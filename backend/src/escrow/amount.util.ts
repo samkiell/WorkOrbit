@@ -9,6 +9,11 @@ export function toStroops(amount: number): bigint {
     throw new RangeError('Amount must be positive and fit the supported decimal range.');
   }
 
-  const [whole, fraction = ''] = amount.toFixed(7).split('.');
+  const fixed = amount.toFixed(7);
+  if (Number(fixed) !== amount) {
+    throw new RangeError('Amount must not have more than seven decimal places.');
+  }
+
+  const [whole, fraction = ''] = fixed.split('.');
   return BigInt(whole) * 10_000_000n + BigInt(fraction.padEnd(7, '0'));
 }
