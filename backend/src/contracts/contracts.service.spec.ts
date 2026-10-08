@@ -243,6 +243,19 @@ describe('ContractsService', () => {
       ).rejects.toBeInstanceOf(ConflictException);
     });
 
+    it('rejects funding confirmation for a contract that is not PENDING', async () => {
+      const { prisma, service, escrow } = setup();
+      prisma.contract.findUnique.mockResolvedValue({
+        ...baseContract,
+        status: ContractStatus.ACTIVE,
+      });
+
+      await expect(
+        service.confirmFund(CONTRACT_ID, CLIENT_ID, 'a'.repeat(64)),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(escrow.verifyTransaction).not.toHaveBeenCalled();
+    });
+
     it('verifies tx hash on Horizon and saves it', async () => {
       const { prisma, escrow, service } = setup();
       prisma.contract.findUnique.mockResolvedValue(baseContract);
