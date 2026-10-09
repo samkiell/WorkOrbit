@@ -1,0 +1,39 @@
+name: Refresh dependency lockfiles
+
+on:
+  push:
+    branches:
+      - security/runtime-dependency-updates
+    paths:
+      - frontend/package.json
+      - backend/package.json
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: security/runtime-dependency-updates
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Refresh frontend lockfile
+        working-directory: frontend
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Refresh backend lockfile
+        working-directory: backend
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit lockfile updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/package-lock.json backend/package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(deps): refresh npm lockfiles"
+            git push origin security/runtime-dependency-updates
+          fi
