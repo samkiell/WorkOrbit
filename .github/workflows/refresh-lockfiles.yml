@@ -22,17 +22,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Refresh frontend lockfile
+      - name: Refresh frontend npm lockfile
         working-directory: frontend
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - name: Refresh backend lockfile
+      - name: Refresh backend npm lockfile
         working-directory: backend
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Refresh backend pnpm lockfile
+        working-directory: backend
+        run: |
+          corepack enable
+          pnpm install --lockfile-only --ignore-scripts --no-frozen-lockfile
       - name: Commit lockfile updates
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/package-lock.json backend/package-lock.json
+          git add frontend/package-lock.json backend/package-lock.json backend/pnpm-lock.yaml
           if ! git diff --cached --quiet; then
             git commit -m "chore(deps): refresh npm lockfiles"
             git push origin security/runtime-dependency-updates
