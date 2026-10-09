@@ -26,16 +26,11 @@ jobs:
         run: |
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           npm audit fix --package-lock-only --ignore-scripts --no-fund || true
-      - name: Refresh pnpm lockfile
-        working-directory: backend
-        run: |
-          corepack enable
-          pnpm install --lockfile-only --ignore-scripts --no-frozen-lockfile
       - name: Commit lockfile updates
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add backend/package-lock.json backend/pnpm-lock.yaml
+          git add backend/package-lock.json
           if ! git diff --cached --quiet; then
             git commit -m "chore(deps): refresh backend lockfiles"
             git push origin security/runtime-dependency-updates
